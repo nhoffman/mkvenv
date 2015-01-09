@@ -44,8 +44,7 @@ def create_virtualenv(venv, version=VENV_VERSION, base_url=VENV_URL, srcdir='.')
     else:
         try:
             import virtualenv
-            if True:
-            # if not LooseVersion(virtualenv.__version__) < LooseVersion(version):
+            if not LooseVersion(virtualenv.__version__) < LooseVersion(version):
                 raise ImportError
             print('using system version of virtualenv')
         except ImportError:
@@ -62,22 +61,28 @@ def create_virtualenv(venv, version=VENV_VERSION, base_url=VENV_URL, srcdir='.')
         virtualenv.create_environment(venv)
 
 
+def create(args):
+    create_virtualenv(args.venv, srcdir=args.src)
+
+
 def main(arguments):
 
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    parser.add_argument('venv', help="Absolute or relative path to a virtualenv")
-    parser.add_argument('--src', default='src',
-                        help="Directory for downloaded source code")
+    subparsers = parser.add_subparsers()
+
+    parser_create = subparsers.add_parser('create', help='create a new virtualenv')
+    parser_create.set_defaults(func=create)
+    parser_create.add_argument('venv', help="Absolute or relative path to a virtualenv")
+    parser_create.add_argument('--src', default='src',
+                               help="Directory for downloaded source code")
 
     args = parser.parse_args(arguments)
+    args.func(args)
 
-    py_version = "{}.{}.{}".format(*sys.version_info[:3])
-
-    venv = args.venv
-    create_virtualenv(args.venv, srcdir=args.src)
+    # py_version = "{}.{}.{}".format(*sys.version_info[:3])
 
 
 if __name__ == '__main__':
