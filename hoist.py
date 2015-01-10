@@ -62,8 +62,27 @@ def create_virtualenv(venv, version=VENV_VERSION, base_url=VENV_URL, srcdir='.')
 
 
 def create(args):
+    """Create a new virtualenv
+
+    """
     create_virtualenv(args.venv, srcdir=args.src)
 
+
+def add_create(subparsers):
+    subparser = add_subparser(subparsers, func=create)
+    subparser.add_argument('venv', help="Absolute or relative path to a virtualenv")
+    subparser.add_argument('--src', default='src',
+                           help="Directory for downloaded source code")
+
+
+def add_subparser(subparsers, func):
+    subparser = subparsers.add_parser(
+        func.__name__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        help=func.__doc__.strip().split('\n')[0],
+        description=func.__doc__)
+    subparser.set_defaults(func=func)
+    return subparser
 
 def main(arguments):
 
@@ -72,12 +91,7 @@ def main(arguments):
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     subparsers = parser.add_subparsers()
-
-    parser_create = subparsers.add_parser('create', help='create a new virtualenv')
-    parser_create.set_defaults(func=create)
-    parser_create.add_argument('venv', help="Absolute or relative path to a virtualenv")
-    parser_create.add_argument('--src', default='src',
-                               help="Directory for downloaded source code")
+    add_create(subparsers)
 
     args = parser.parse_args(arguments)
     args.func(args)
