@@ -9,6 +9,7 @@ import sys
 import argparse
 import imp
 import tarfile
+import textwrap
 
 from os import path
 from urllib2 import urlopen
@@ -61,28 +62,31 @@ def create_virtualenv(venv, version=VENV_VERSION, base_url=VENV_URL, srcdir='.')
         virtualenv.create_environment(venv)
 
 
-def create(args):
-    """Create a new virtualenv
+class Subparser(object):
+    def __init__(self, subparsers, name):
+        self.subparser = subparsers.add_parser(
+            name,
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            help=self.__doc__.strip().split('\n')[0],
+            description=textwrap.dedent(self.__doc__.rstrip()))
+        self.subparser.set_defaults(func=self.action)
+        self.add_arguments()
 
+
+class Create(Subparser):
     """
-    create_virtualenv(args.venv, srcdir=args.src)
+    Create a new virtualenv
+    """
 
+    def add_arguments(self):
+        self.subparser.add_argument(
+            'venv', help="Path to a virtualenv")
+        self.subparser.add_argument('--src', default='src',
+                               help="Directory for downloaded source code")
 
-def add_create(subparsers):
-    subparser = add_subparser(subparsers, func=create)
-    subparser.add_argument('venv', help="Absolute or relative path to a virtualenv")
-    subparser.add_argument('--src', default='src',
-                           help="Directory for downloaded source code")
+    def action(self, args):
+        create_virtualenv(args.venv, srcdir=args.src)
 
-
-def add_subparser(subparsers, func):
-    subparser = subparsers.add_parser(
-        func.__name__,
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        help=func.__doc__.strip().split('\n')[0],
-        description=func.__doc__)
-    subparser.set_defaults(func=func)
-    return subparser
 
 def main(arguments):
 
@@ -91,7 +95,7 @@ def main(arguments):
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     subparsers = parser.add_subparsers()
-    add_create(subparsers)
+    create = Create(subparsers, name='create')
 
     args = parser.parse_args(arguments)
     args.func(args)
