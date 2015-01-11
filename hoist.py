@@ -142,13 +142,20 @@ def wheel_paths(args):
     wheelstreet = args.wheelstreet \
         or os.environ.get('WHEELSTREET') \
         or (WHEELSTREET_SYSTEM if args.system else WHEELSTREET_USER)
+    wheelstreet = expand(wheelstreet)
     wheelhouse = path.join(wheelstreet, PY_VERSION)
 
     return wheelstreet, wheelhouse, path.exists(wheelhouse)
 
+def expand(pth):
+    if pth:
+        return path.abspath(path.expanduser(pth))
+    else:
+        return pth
 
 def create_virtualenv(venv, version=VENV_VERSION, base_url=VENV_URL, srcdir=None):
 
+    venv = expand(venv)
     venv_tgz = 'virtualenv-{}.tar.gz'.format(version)
     src_is_temp = False
 
@@ -209,7 +216,7 @@ class Show(Subparser):
             '--venv', help="Path to a virtualenv")
 
     def action(self, args):
-        venv = args.venv or os.environ.get('VIRTUAL_ENV')
+        venv = expand(args.venv or os.environ.get('VIRTUAL_ENV'))
         retval = 1
         if venv:
             output, is_installed = pip_show(venv, args.pkg)
@@ -265,7 +272,7 @@ class Install(Subparser):
 
     def action(self, args):
         quiet=args.verbosity < 1
-        venv = args.venv or os.environ.get('VIRTUAL_ENV')
+        venv = expand(args.venv or os.environ.get('VIRTUAL_ENV'))
 
         if not venv:
             sys.exit('a virtualenv must be active or a path specified using --venv')
