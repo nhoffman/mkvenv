@@ -147,11 +147,13 @@ def wheel_paths(args):
 
     return wheelstreet, wheelhouse, path.exists(wheelhouse)
 
+
 def expand(pth):
     if pth:
         return path.abspath(path.expanduser(pth))
     else:
         return pth
+
 
 def create_virtualenv(venv, version=VENV_VERSION, base_url=VENV_URL, srcdir=None):
 
@@ -271,7 +273,7 @@ class Install(Subparser):
                 PY_VERSION))
 
     def action(self, args):
-        quiet=args.verbosity < 1
+        quiet = args.verbosity < 1
         venv = expand(args.venv or os.environ.get('VIRTUAL_ENV'))
 
         if not venv:
@@ -315,7 +317,7 @@ class Wheel(Subparser):
         # create WHEELSTREET/{PY_VERSION} and virtualenv if necessary
         wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
 
-        quiet=args.verbosity < 1
+        quiet = args.verbosity < 1
 
         venv = path.join(wheelhouse, 'venv')
         create_virtualenv(venv)
@@ -350,7 +352,6 @@ def main(arguments):
     parser.add_argument(
         '-q', '--quiet', action='store_const', dest='verbosity', const=0,
         help='Suppress screen output from pip commands')
-
 
     subparsers = parser.add_subparsers()
     Virtualenv(subparsers, name='virtualenv')
