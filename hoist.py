@@ -86,6 +86,16 @@ def pip_wheel(wheelhouse, pkg):
     subprocess.check_call(cmd)
 
 
+def wheel_paths(args):
+
+    wheelstreet = args.wheelstreet \
+                  or os.environ.get('WHEELSTREET') \
+                  or (WHEELSTREET_SYSTEM if args.system else WHEELSTREET_USER)
+    wheelhouse = path.join(wheelstreet, PY_VERSION)
+
+    return wheelstreet, wheelhouse, path.exists(wheelhouse)
+
+
 def create_virtualenv(venv, version=VENV_VERSION, base_url=VENV_URL, srcdir=None):
 
     venv_tgz = 'virtualenv-{}.tar.gz'.format(version)
@@ -143,15 +153,9 @@ class Search(Subparser):
             '--venv', help="Path to a virtualenv")
 
     def action(self, args):
-
-        wheelstreet = args.wheelstreet \
-                      or os.environ.get('WHEELSTREET') \
-                      or (WHEELSTREET_SYSTEM if args.system else WHEELSTREET_USER)
-        wheelhouse = path.join(wheelstreet, PY_VERSION)
-
+        wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
         found_wheel = glob.glob(path.join(wheelhouse, args.pkg + '*'))
-
-        venv = args.venv or os.environ.get('VIRTUAL_ENV')
+        # venv = args.venv or os.environ.get('VIRTUAL_ENV')
 
         return 0 if found_wheel else 1
 
@@ -197,13 +201,10 @@ class Install(Subparser):
 
         print('installing packages to virtualenv {}'.format(args.venv))
 
-        wheelstreet = args.wheelstreet \
-                      or os.environ.get('WHEELSTREET') \
-                      or (WHEELSTREET_SYSTEM if args.system else WHEELSTREET_USER)
-        wheelhouse = path.join(wheelstreet, PY_VERSION)
+        wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
 
         if args.cache:
-            if not path.exists(wheelhouse):
+            if not wheelhouse_exists:
                 sys.exit(('{} does not exist - you can '
                           'create it using the `wheel` command').format(wheelhouse))
                 print('caching wheels to {}'.format(wheelhouse))
@@ -235,10 +236,7 @@ class Wheel(Subparser):
     def action(self, args):
 
         # create WHEELSTREET/{PY_VERSION} and virtualenv if necessary
-        wheelstreet = args.wheelstreet \
-                      or os.environ.get('WHEELSTREET') \
-                      or (WHEELSTREET_SYSTEM if args.system else WHEELSTREET_USER)
-        wheelhouse = path.join(wheelstreet, PY_VERSION)
+        wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
 
         venv = path.join(wheelhouse, 'venv')
         create_virtualenv(venv)
