@@ -1,6 +1,40 @@
 #!/usr/bin/env python
 
-"""Install a virtualenv, downloading the source if necessary
+"""Streamline the creation of virtualenvs and use of wheels.
+
+ * Create and maintain a cache of wheels.
+ * Create a virtualenv and install packages from the wheel cache in a
+   single command.
+ * Add to the wheel cache as new packages are built.
+
+The sources for the ``virtualenv`` package are downloaded and used to
+create the virtualenv if uninstalled or not up to date, so the only
+dependency should be a python interpreter (version 2.7.x only for
+now).
+
+The location of the wheel cache (the "wheelstreet") is determined as
+follows:
+
+ * The default location is '~/wheels' (or
+   /usr/local/share/python/wheels if the --system option is used); or
+ * the environment variable ``$WHEELSTREET``; or
+ * a path specified using the ``-w/--wheelstreet`` option.
+
+Within the "wheelstreet" directory, wheels are saved within a
+subdirectory (the "wheelhouse") named according to the version of the
+python interpreter (eg '~/wheels/2.7.9/'). In this way, wheels built
+againt different versions of the interpreter may coexist.
+
+The target virtualenv is either:
+
+ * An active virtualenv (indicated by the ``$VIRTUAL_ENV``); or
+ * as indicated on the command line.
+
+Packages are specified in a requirements file in the same format used
+by pip. Lines starting with '-e', '#', or containing a path separator
+('/') are skipped. Unlike pip, packages are guaranteed to be installed
+in the order specified; this is important for packages for which
+installation fails in the absence of already-installed dependencies.
 
 """
 
@@ -60,6 +94,7 @@ def read_requirements(fname):
     with open(fname) as f:
         for line in f:
             if line.startswith('#') or line.startswith('-e') or '/' in line:
+                log.info('skipping {}'.format(line.strip()))
                 continue
             yield line.strip()
 
@@ -299,7 +334,8 @@ def main(arguments):
     parser.add_argument(
         '-w', '--wheelstreet',
         help="""install wheels in WHEELSTREET/{} instead of the
-        default location""".format(PY_VERSION))
+        default location (may also be specified by defining a shell
+        environment variable $WHEELSTREET)""".format(PY_VERSION))
     parser.add_argument(
         '-v', action='count', dest='verbosity', default=1,
         help='Increase verbosity of screen output (eg, -v is verbose, '
