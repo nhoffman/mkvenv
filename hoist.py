@@ -14,10 +14,13 @@ import sys
 import tarfile
 import tempfile
 import textwrap
+import logging
 
 from os import path
 from urllib2 import urlopen
 from distutils.version import LooseVersion
+
+log = logging
 
 VENV_URL = 'https://pypi.python.org/packages/source/v/virtualenv'
 VENV_VERSION = '1.11.6'
@@ -40,7 +43,7 @@ def mkdir(pth):
 
 def fetch(url, dest_dir='.'):
 
-    print('downloading {} to {}'.format(url, dest_dir))
+    log.info('downloading {} to {}'.format(url, dest_dir))
 
     mkdir(dest_dir)
     fname = path.join(dest_dir, path.basename(url))
@@ -61,12 +64,15 @@ def read_requirements(fname):
             yield line.strip()
 
 
-def pip_install(venv, pkg, wheelhouse=None):
+def pip_install(venv, pkg, wheelhouse=None, quiet=False):
     pip = path.join(venv, 'bin', 'pip')
     cmd = [pip, 'install', pkg]
 
     if wheelhouse and path.exists(wheelhouse):
         cmd += ['--use-wheel', '--find-links', wheelhouse, '--no-index']
+
+    if quiet:
+        cmd += ['--quiet']
 
     subprocess.check_call(cmd)
 
@@ -78,7 +84,7 @@ def pip_show(venv, pkg):
     return output, pkg in output
 
 
-def pip_wheel(wheelhouse, pkg):
+def pip_wheel(wheelhouse, pkg, quiet=False):
     cache = path.join(wheelhouse, 'cache')
     venv = path.join(wheelhouse, 'venv')
     pip = path.join(venv, 'bin', 'pip')
@@ -89,6 +95,9 @@ def pip_wheel(wheelhouse, pkg):
         '--find-links', wheelhouse,
         '--wheel-dir', wheelhouse
     ]
+
+    if quiet:
+        cmd += ['--quiet']
 
     subprocess.check_call(cmd)
 
@@ -109,16 +118,16 @@ def create_virtualenv(venv, version=VENV_VERSION, base_url=VENV_URL, srcdir=None
     src_is_temp = False
 
     if path.exists(path.join(venv, 'bin', 'activate')):
-        print('virtualenv {} already exists'.format(venv))
+        log.info('virtualenv {} already exists'.format(venv))
     else:
         try:
             # raise ImportError
             import virtualenv
             if LooseVersion(virtualenv.__version__) < LooseVersion(version):
                 raise ImportError
-            print('using system version of virtualenv')
+            log.info('using system version of virtualenv')
         except ImportError:
-            print('downloading and extracting virtualenv source to {}'.format(srcdir))
+            log.info('downloading and extracting virtualenv source to {}'.format(srcdir))
 
             src_is_temp = not srcdir
             srcdir = srcdir or tempfile.mkdtemp()
@@ -130,7 +139,7 @@ def create_virtualenv(venv, version=VENV_VERSION, base_url=VENV_URL, srcdir=None
                 'virtualenv',
                 path.join(archive.replace('.tar.gz', ''), 'virtualenv.py'))
 
-        print('creating virtualenv {}'.format(venv))
+        log.info('creating virtualenv {}'.format(venv))
         virtualenv.create_environment(venv)
 
         if src_is_temp:
@@ -220,13 +229,13 @@ class Install(Subparser):
                 PY_VERSION))
 
     def action(self, args):
-
+        quiet=args.verbosity < 1
         venv = args.venv or os.environ.get('VIRTUAL_ENV')
 
         if not venv:
             sys.exit('a virtualenv must be active or a path specified using --venv')
 
-        print('installing packages to virtualenv {}'.format(args.venv))
+        log.info('installing packages to virtualenv {}'.format(args.venv))
 
         wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
 
@@ -234,7 +243,7 @@ class Install(Subparser):
             if not wheelhouse_exists:
                 sys.exit(('{} does not exist - you can '
                           'create it using the `wheel` command').format(wheelhouse))
-                print('caching wheels to {}'.format(wheelhouse))
+                log.info('caching wheels to {}'.format(wheelhouse))
             wheel_venv = path.join(wheelhouse, 'venv')
 
         create_virtualenv(venv)
@@ -242,9 +251,10 @@ class Install(Subparser):
         if args.requirements:
             for pkg in read_requirements(args.requirements):
                 if args.cache:
-                    pip_wheel(wheelhouse, pkg)
-                    pip_install(wheel_venv, pkg, wheelhouse)
-                pip_install(venv, pkg, wheelhouse if wheelhouse_exists else None)
+                    pip_wheel(wheelhouse, pkg, quiet=quiet)
+                    pip_install(wheel_venv, pkg, wheelhouse, quiet=quiet)
+                pip_install(venv, pkg, wheelhouse if wheelhouse_exists else None,
+                            quiet=quiet)
 
 
 class Wheel(Subparser):
@@ -263,15 +273,17 @@ class Wheel(Subparser):
         # create WHEELSTREET/{PY_VERSION} and virtualenv if necessary
         wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
 
+        quiet=args.verbosity < 1
+
         venv = path.join(wheelhouse, 'venv')
         create_virtualenv(venv)
-        pip_install(venv, WHEEL_PKG)
+        pip_install(venv, WHEEL_PKG, quiet=quiet)
 
         # install packages if specified
         if args.requirements:
             for pkg in read_requirements(args.requirements):
-                pip_wheel(wheelhouse, pkg)
-                pip_install(venv, pkg, wheelhouse)
+                pip_wheel(wheelhouse, pkg, quiet=quiet)
+                pip_install(venv, pkg, wheelhouse, quiet=quiet)
 
 
 def main(arguments):
@@ -288,6 +300,14 @@ def main(arguments):
         '-w', '--wheelstreet',
         help="""install wheels in WHEELSTREET/{} instead of the
         default location""".format(PY_VERSION))
+    parser.add_argument(
+        '-v', action='count', dest='verbosity', default=1,
+        help='Increase verbosity of screen output (eg, -v is verbose, '
+        '-vv more so)')
+    parser.add_argument(
+        '-q', '--quiet', action='store_const', dest='verbosity', const=0,
+        help='Suppress screen output from pip commands')
+
 
     subparsers = parser.add_subparsers()
     Virtualenv(subparsers, name='virtualenv')
@@ -296,7 +316,19 @@ def main(arguments):
     Show(subparsers, name='show')
 
     args = parser.parse_args(arguments)
-    print('using {} ({})'.format(sys.executable, PY_VERSION))
+
+    # set up logging
+    loglevel = {
+        0: logging.ERROR,
+        1: logging.WARNING,
+        2: logging.INFO,
+        3: logging.DEBUG,
+    }.get(args.verbosity, logging.DEBUG)
+
+    logformat = '%(levelname)s %(message)s' if args.verbosity > 1 else '%(message)s'
+    logging.basicConfig(file=sys.stderr, format=logformat, level=loglevel)
+
+    log.info('using {} ({})'.format(sys.executable, PY_VERSION))
     return args.func(args)
 
 
