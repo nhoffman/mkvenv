@@ -26,7 +26,7 @@ PY_VERSION = "{}.{}.{}".format(*sys.version_info[:3])
 WHEELSTREET_SYSTEM = os.environ.get('WHEELSTREET', '/usr/local/share/python/wheels')
 WHEELSTREET_USER = os.environ.get('WHEELSTREET', '~/wheels')
 
-WHEEL_PKG = 'wheel==0.24.0'
+WHEEL_PKG = 'wheel>=0.24.0'
 
 
 def mkdir(pth):
@@ -56,7 +56,7 @@ def fetch(url, dest_dir='.'):
 def read_requirements(fname):
     with open(fname) as f:
         for line in f:
-            if line.startswith('#') or '/' in line:
+            if line.startswith('#') or line.startswith('-e') or '/' in line:
                 continue
             yield line.strip()
 
@@ -64,14 +64,21 @@ def read_requirements(fname):
 def pip_install(venv, pkg, wheelhouse=None):
     pip = path.join(venv, 'bin', 'pip')
     cmd = [pip, 'install', pkg]
+
     if wheelhouse and path.exists(wheelhouse):
         cmd += ['--use-wheel', '--find-links', wheelhouse, '--no-index']
 
     subprocess.check_call(cmd)
 
 
+def pip_show(venv, pkg):
+    pip = path.join(venv, 'bin', 'pip')
+    cmd = [pip, 'show', pkg]
+    output = subprocess.check_output(cmd)
+    return output, pkg in output
+
+
 def pip_wheel(wheelhouse, pkg):
-    src = path.join(wheelhouse, 'src')
     cache = path.join(wheelhouse, 'cache')
     venv = path.join(wheelhouse, 'venv')
     pip = path.join(venv, 'bin', 'pip')
@@ -89,8 +96,8 @@ def pip_wheel(wheelhouse, pkg):
 def wheel_paths(args):
 
     wheelstreet = args.wheelstreet \
-                  or os.environ.get('WHEELSTREET') \
-                  or (WHEELSTREET_SYSTEM if args.system else WHEELSTREET_USER)
+        or os.environ.get('WHEELSTREET') \
+        or (WHEELSTREET_SYSTEM if args.system else WHEELSTREET_USER)
     wheelhouse = path.join(wheelstreet, PY_VERSION)
 
     return wheelstreet, wheelhouse, path.exists(wheelhouse)
@@ -141,9 +148,14 @@ class Subparser(object):
         self.add_arguments()
 
 
-class Search(Subparser):
+class Show(Subparser):
     """
-    Check the status of a package
+    Check the status of a package.
+
+    Lists wheels representing `pkg`, or describes whether `pkg` is
+    installed if a virtualenv is active or specified with --venv. In
+    either case, exits with nonzero status if not found.
+
     """
 
     def add_arguments(self):
@@ -153,11 +165,26 @@ class Search(Subparser):
             '--venv', help="Path to a virtualenv")
 
     def action(self, args):
-        wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
-        found_wheel = glob.glob(path.join(wheelhouse, args.pkg + '*'))
-        # venv = args.venv or os.environ.get('VIRTUAL_ENV')
+        venv = args.venv or os.environ.get('VIRTUAL_ENV')
+        retval = 1
+        if venv:
+            output, is_installed = pip_show(venv, args.pkg)
+            if is_installed:
+                retval = 0
+                print(output.strip())
+            else:
+                print('package {} is not installed in {}'.format(args.pkg, venv))
+        else:
+            wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
+            found_wheel = glob.glob(path.join(wheelhouse, args.pkg + '*'))
+            if found_wheel:
+                retval = 0
+                for whl in found_wheel:
+                    print(whl)
+            else:
+                print('no wheel for {} in {}'.format(args.pkg, wheelhouse))
 
-        return 0 if found_wheel else 1
+        return retval
 
 
 class Virtualenv(Subparser):
@@ -212,14 +239,12 @@ class Install(Subparser):
 
         create_virtualenv(venv)
 
-        pip = path.join(args.venv, 'bin', 'pip')
-
         if args.requirements:
             for pkg in read_requirements(args.requirements):
                 if args.cache:
                     pip_wheel(wheelhouse, pkg)
                     pip_install(wheel_venv, pkg, wheelhouse)
-                pip_install(venv, pkg, wheelhouse)
+                pip_install(venv, pkg, wheelhouse if wheelhouse_exists else None)
 
 
 class Wheel(Subparser):
@@ -268,7 +293,7 @@ def main(arguments):
     Virtualenv(subparsers, name='virtualenv')
     Wheel(subparsers, name='wheel')
     Install(subparsers, name='install')
-    Search(subparsers, name='search')
+    Show(subparsers, name='show')
 
     args = parser.parse_args(arguments)
     print('using {} ({})'.format(sys.executable, PY_VERSION))
@@ -277,4 +302,3 @@ def main(arguments):
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
-
