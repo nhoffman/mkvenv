@@ -4,13 +4,15 @@
 
 """
 
-import os
-import sys
 import argparse
 import imp
-import tarfile
-import textwrap
+import os
 import subprocess
+import shutil
+import sys
+import tarfile
+import tempfile
+import textwrap
 
 from os import path
 from urllib2 import urlopen
@@ -37,6 +39,8 @@ def mkdir(pth):
 
 def fetch(url, dest_dir='.'):
 
+    print('downloading {} to {}'.format(url, dest_dir))
+
     mkdir(dest_dir)
     fname = path.join(dest_dir, path.basename(url))
     if not path.exists(fname):
@@ -48,20 +52,58 @@ def fetch(url, dest_dir='.'):
     return fname
 
 
-def create_virtualenv(venv, version=VENV_VERSION, base_url=VENV_URL, srcdir='.'):
+def read_requirements(fname):
+    with open(fname) as f:
+        for line in f:
+            if line.startswith('#') or '/' in line:
+                continue
+            yield line.strip()
+
+
+def pip_install(venv, pkg, wheelhouse=None):
+    pip = path.join(venv, 'bin', 'pip')
+    cmd = [pip, 'install', pkg]
+    if wheelhouse:
+        cmd += ['--use-wheel', '--find-links', wheelhouse, '--no-index']
+
+    subprocess.check_call(cmd)
+
+
+def pip_wheel(wheelhouse, pkg):
+    src = path.join(wheelhouse, 'src')
+    cache = path.join(wheelhouse, 'cache')
+    venv = path.join(wheelhouse, 'venv')
+    pip = path.join(venv, 'bin', 'pip')
+    cmd = [
+        pip, 'wheel', pkg,
+        '--download-cache', cache,
+        '--use-wheel',
+        '--find-links', wheelhouse,
+        '--wheel-dir', wheelhouse
+    ]
+
+    subprocess.check_call(cmd)
+
+
+def create_virtualenv(venv, version=VENV_VERSION, base_url=VENV_URL, srcdir=None):
 
     venv_tgz = 'virtualenv-{}.tar.gz'.format(version)
+    src_is_temp = False
 
     if path.exists(path.join(venv, 'bin', 'activate')):
         print('virtualenv {} already exists'.format(venv))
     else:
         try:
+            # raise ImportError
             import virtualenv
-            if not LooseVersion(virtualenv.__version__) < LooseVersion(version):
+            if LooseVersion(virtualenv.__version__) < LooseVersion(version):
                 raise ImportError
             print('using system version of virtualenv')
         except ImportError:
             print('downloading and extracting virtualenv source to {}'.format(srcdir))
+
+            src_is_temp = not srcdir
+            srcdir = srcdir or tempfile.mkdtemp()
             archive = fetch(path.join(base_url, venv_tgz), dest_dir=srcdir)
             with tarfile.open(archive, 'r') as tfile:
                 tfile.extractall(srcdir)
@@ -72,6 +114,9 @@ def create_virtualenv(venv, version=VENV_VERSION, base_url=VENV_URL, srcdir='.')
 
         print('creating virtualenv {}'.format(venv))
         virtualenv.create_environment(venv)
+
+        if src_is_temp:
+            shutil.rmtree(srcdir)
 
 
 class Subparser(object):
@@ -93,11 +138,57 @@ class Virtualenv(Subparser):
     def add_arguments(self):
         self.subparser.add_argument(
             'venv', help="Path to a virtualenv")
-        self.subparser.add_argument(
-            '--src', default='src', help="Directory for downloaded source code")
 
     def action(self, args):
-        create_virtualenv(args.venv, srcdir=args.src)
+        create_virtualenv(args.venv)
+
+
+class Install(Subparser):
+    """
+    Install packages to a virtualenv, optionally building and caching wheels
+
+    If the path specified by --venv does not exist, create it.
+    """
+
+    def add_arguments(self):
+        self.subparser.add_argument(
+            '--venv', help="path to a virtualenv (defaults to active virtualenv)",
+            default=os.environ.get('VIRTUAL_ENV'))
+        self.subparser.add_argument(
+            '-r', '--requirements',
+            help="""file containing list of packages to install""")
+        self.subparser.add_argument(
+            '--no-cache', dest='cache', action='store_false', default=True,
+            help="""do not build and cache wheels in WHEELHOUSE/{}""".format(
+                PY_VERSION))
+
+    def action(self, args):
+
+        venv = args.venv or os.environ.get('VIRTUAL_ENV')
+
+        if not venv:
+            sys.exit('a virtualenv must be active or a path specified using --venv')
+
+        print('installing packages to virtualenv {}'.format(args.venv))
+
+        wheelstreet = args.wheelstreet \
+                      or os.environ.get('WHEELSTREET') \
+                      or (WHEELSTREET_SYSTEM if args.system else WHEELSTREET_USER)
+
+        wheelhouse = path.join(wheelstreet, PY_VERSION)
+
+        if args.cache:
+            if not path.exists(wheelhouse):
+                sys.exit(('{} does not exist - you can '
+                          'create it using the `wheel` command').format(wheelhouse))
+                print('caching wheels to {}'.format(wheelhouse))
+
+        create_virtualenv(venv)
+
+        # pip = path.join(args.venv, 'bin', 'pip')
+        # if args.requirements:
+        #     for pkg in read_requirements(args.requirements):
+        #         pip_install(args.venv, pkg, wheelhouse)
 
 
 class Wheel(Subparser):
@@ -107,42 +198,27 @@ class Wheel(Subparser):
 
     def add_arguments(self):
         self.subparser.add_argument(
-            '-w', '--wheelstreet', default=WHEELSTREET_USER,
-            help="""Directory for wheels and virtualenv [%(default)s]""")
-        self.subparser.add_argument(
             '-r', '--requirements',
             help="""file containing list of packages to install"""
         )
 
     def action(self, args):
-        wheelhouse = path.join(args.wheelstreet, PY_VERSION)
-        src = path.join(wheelhouse, 'src')
-        cache = path.join(wheelhouse, 'cache')
+
+        # create WHEELSTREET/{PY_VERSION} and virtualenv if necessary
+        wheelstreet = args.wheelstreet \
+                      or os.environ.get('WHEELSTREET') \
+                      or (WHEELSTREET_SYSTEM if args.system else WHEELSTREET_USER)
+
+        wheelhouse = path.join(wheelstreet, PY_VERSION)
         venv = path.join(wheelhouse, 'venv')
-        create_virtualenv(venv, src)
+        create_virtualenv(venv)
+        pip_install(venv, WHEEL_PKG)
 
-        pip = path.join(venv, 'bin', 'pip')
-
-        subprocess.check_call(
-            [pip, 'install', '--download-cache', cache, WHEEL_PKG])
-
+        # install packages if specified
         if args.requirements:
-            with open(args.requirements) as f:
-                for pkg in f:
-                    subprocess.check_call([
-                        pip, 'wheel', pkg,
-                        '--download-cache', cache,
-                        '--use-wheel',
-                        '--find-links', wheelhouse,
-                        '--wheel-dir', wheelhouse
-                    ])
-
-                    subprocess.check_call([
-                        pip, 'install', pkg,
-                        '--use-wheel',
-                        '--no-index',
-                        '--find-links', wheelhouse
-                    ])
+            for pkg in read_requirements(args.requirements):
+                pip_wheel(wheelhouse, pkg)
+                pip_install(venv, pkg, wheelhouse)
 
 
 def main(arguments):
@@ -151,9 +227,19 @@ def main(arguments):
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
+    parser.add_argument(
+        '--system', action='store_true', default=False,
+        help="""use {} for the default location of wheels (rather than
+        {})""".format(WHEELSTREET_SYSTEM, WHEELSTREET_USER))
+    parser.add_argument(
+        '-w', '--wheelstreet',
+        help="""install wheels in WHEELSTREET/{} instead of the
+        default location""".format(PY_VERSION))
+
     subparsers = parser.add_subparsers()
     Virtualenv(subparsers, name='virtualenv')
     Wheel(subparsers, name='wheel')
+    Install(subparsers, name='install')
 
     args = parser.parse_args(arguments)
     print('using {} ({})'.format(sys.executable, PY_VERSION))
