@@ -2,10 +2,12 @@
 
 """Wrapper for virtualenv, pip, and wheel
 
- * Automatically create and maintain a cache of wheels.
+ * Create and maintain a cache of wheels.
  * Create a virtualenv and install packages from the wheel cache in a
    single command.
  * Add to the wheel cache as new packages are built.
+ * Download the ``virtualenv`` source code when not already installed
+   or out of date.
 
 The sources for the ``virtualenv`` package are downloaded and used to
 create the virtualenv if uninstalled or not up to date, so the only

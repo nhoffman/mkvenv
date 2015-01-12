@@ -6,12 +6,13 @@ A wrapper for virtualenv, pip, and wheel.
 
 Features:
 
- * Automatically create and maintain a cache of wheels.
- * Downloads the ``virtualenv`` source code when not already installed
-   or out of date.
+ * Create and maintain a cache of wheels.
  * Create a virtualenv and install packages from the wheel cache in a
    single command.
  * Add to the wheel cache as new packages are built.
+ * Download the ``virtualenv`` source code when not already installed
+   or out of date.
+
 
 Examples
 ========
