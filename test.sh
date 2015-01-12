@@ -63,4 +63,4 @@ cleanup
 exists test-env
 source test-env/bin/activate
 ./hoist.py $quiet $verbose install -r requirements.txt --no-cache
-./hoist.py $quiet $verbose show --venv test-env six
+./hoist.py $quiet $verbose show --venv test-env flake8
