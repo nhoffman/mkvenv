@@ -95,11 +95,12 @@ def fetch(url, dest_dir='.'):
 
 def read_requirements(fname):
     with open(fname) as f:
-        for line in f:
-            if line.startswith('#') or line.startswith('-e') or '/' in line:
-                log.info('skipping {}'.format(line.strip()))
+        for line in [x.strip() for x in f]:
+            if not line or line.startswith('#') or line.startswith('-e') or '/' in line:
+                log.info('skipping {}'.format(line))
                 continue
-            yield line.strip()
+            log.info(line)
+            yield line
 
 
 def pip_install(venv, pkg, wheelhouse=None, quiet=False):
@@ -243,6 +244,21 @@ class Show(Subparser):
         return retval
 
 
+class List(Subparser):
+    """
+    List wheels
+    """
+
+    def add_arguments(self):
+        pass
+
+    def action(self, args):
+        wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
+        log.warning('Wheels in {}/'.format(wheelhouse))
+        for whl in glob.glob(path.join(wheelhouse, '*.whl')):
+            print(path.basename(whl))
+
+
 class Virtualenv(Subparser):
     """
     Create a new virtualenv
@@ -367,6 +383,7 @@ def main(arguments=None):
     Wheel(subparsers, name='wheel')
     Install(subparsers, name='install')
     Show(subparsers, name='show')
+    List(subparsers, name='list-wheels')
 
     args = parser.parse_args(arguments)
 
