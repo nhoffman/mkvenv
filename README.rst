@@ -46,6 +46,20 @@ saved to the cache, along with wheels for any dependencies::
 Subsequent requests to install any of these packages will use the
 cached wheels.
 
+Installation from the wheel cache can speed things up a lot when
+packages require compilation::
+
+  % cat scientific.txt
+  numpy
+  scipy
+  pandas
+  biopython
+  seqmagick
+  % mkvenv install --venv sci-env -r scientific.txt
+  620.66s user 36.41s system 75% cpu 14:28.52 total
+  % mkvenv install --venv another-env -r scientific.txt
+  10.87s user 4.82s system 18% cpu 1:24.65 total
+
 Installation
 ============
 
