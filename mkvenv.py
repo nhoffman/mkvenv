@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from petard.hoist import main
+from mkvenv.mkvenv import main
 import sys
 
 if __name__ == '__main__':

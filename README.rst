@@ -1,5 +1,5 @@
 ======
-Petard
+mkvenv
 ======
 
 A wrapper for virtualenv, pip, and wheel.
@@ -18,8 +18,8 @@ Examples
 
 Create a wheel cache (~/wheels by default)::
 
-  % hoist wheel
-  % hoist list-wheels
+  % mkvenv wheel
+  % mkvenv list-wheels
   Wheels in /Users/nhoffman/wheels/2.7.7/
 
 Now create a new virtualenv named ``test-env`` and install some
@@ -28,14 +28,14 @@ saved to the cache, along with wheels for any dependencies::
 
   % cat requirements.txt
   flake8
-  % hoist install --venv test-env -r requirements.txt
+  % mkvenv install --venv test-env -r requirements.txt
   % test-env/bin/pip freeze
   flake8==2.3.0
   mccabe==0.3
   pep8==1.5.7
   pyflakes==0.8.1
   wsgiref==0.1.2
-  % hoist list-wheels
+  % mkvenv list-wheels
   Wheels in /Users/nhoffman/wheels/2.7.7/
   flake8-2.3.0-py2.py3-none-any.whl
   mccabe-0.3-py2.py3-none-any.whl
@@ -49,29 +49,29 @@ Installation
 ============
 
 For now, obtain the source code from GitHub
-(https://github.com/nhoffman/petard) and install by running either
+(https://github.com/nhoffman/mkvenv) and install by running either
 ``python setup.py install`` or ``pip install .`` from within the
-package directory. Installation provides a script named ``hoist`` as
-an entry point. ``hoist.py`` may also be executed directly from the
+package directory. Installation provides a script named ``mkvenv`` as
+an entry point. ``mkvenv.py`` may also be executed directly from the
 top level of the package directory.
 
 TODO: upload to pypi
 
-Alternatively, note that the hoist script is implemented as a single
+Alternatively, note that the mkvenv script is implemented as a single
 python file that can be invoked directly as a script. This script can
 be downloaded and used to create a virtualenv on a system on which the
 ``virtualenv`` package is not available::
 
-  wget https://raw.githubusercontent.com/nhoffman/petard/master/petard/hoist.py
-  python hoist.py
+  wget https://raw.githubusercontent.com/nhoffman/mkvenv/master/mkvenv/mkvenv.py
+  python mkvenv.py
 
-It may also be useful to distribute ``hoist.py`` along with other
+It may also be useful to distribute ``mkvenv.py`` along with other
 projects to facilitate creation of execution environments.
 
 Execution
 =========
 
-Run ``hoist -h`` for a list of subcommands and common options, or
-``hoist <subcommand> -h`` for each subcommand. Note that common
-options must be provided before the subcommand (eg, ``hoist -v
+Run ``mkvenv -h`` for a list of subcommands and common options, or
+``mkvenv <subcommand> -h`` for each subcommand. Note that common
+options must be provided before the subcommand (eg, ``mkvenv -v
 wheel -r requirements.txt``)

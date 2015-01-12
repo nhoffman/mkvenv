@@ -23,7 +23,7 @@ follows:
 Within the "wheelstreet" directory, wheels are saved within a
 subdirectory (the "wheelhouse") named according to the version of the
 python interpreter (eg '~/wheels/2.7.9/'). In this way, wheels built
-againt different versions of the interpreter may coexist.
+against different versions of the interpreter may coexist.
 
 The target virtualenv is either:
 
@@ -36,7 +36,7 @@ by pip. Lines starting with '-e', '#', or containing a path separator
 in the order specified; this is important for packages for which
 installation fails in the absence of already-installed dependencies.
 
-For usage examples see https://github.com/nhoffman/petard
+For usage examples see https://github.com/nhoffman/mkvenv
 """
 
 import argparse
