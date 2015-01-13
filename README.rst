@@ -87,6 +87,6 @@ Execution
 =========
 
 Run ``mkvenv -h`` for a list of subcommands and common options, or
-``mkvenv <subcommand> -h`` for each subcommand. Note that common
-options must be provided before the subcommand (eg, ``mkvenv -v
-wheel -r requirements.txt``)
+``mkvenv <subcommand> -h`` for help on a subcommand. Note that common
+options must be provided before the name of the subcommand 
+(eg, ``mkvenv -v wheel -r requirements.txt``)
