@@ -52,6 +52,7 @@ import sys
 import tarfile
 import tempfile
 import textwrap
+import itertools
 
 from os import path
 from urllib2 import urlopen
@@ -96,6 +97,9 @@ def fetch(url, dest_dir='.'):
 
 
 def read_requirements(fname):
+    if not fname:
+        raise StopIteration
+
     with open(fname) as f:
         for line in [x.strip() for x in f]:
             if not line or line.startswith('#') or line.startswith('-e') or '/' in line:
@@ -283,6 +287,10 @@ class Install(Subparser):
 
     def add_arguments(self):
         self.subparser.add_argument(
+            'packages', nargs='*',
+            help="""one or more packages (installed before packages
+            listed in requirements file)""")
+        self.subparser.add_argument(
             '--venv', help="path to a virtualenv (defaults to active virtualenv)",
             default=os.environ.get('VIRTUAL_ENV'))
         self.subparser.add_argument(
@@ -313,13 +321,12 @@ class Install(Subparser):
 
         create_virtualenv(venv)
 
-        if args.requirements:
-            for pkg in read_requirements(args.requirements):
-                if args.cache:
-                    pip_wheel(wheelhouse, pkg, quiet=quiet)
-                    pip_install(wheel_venv, pkg, wheelhouse, quiet=quiet)
-                pip_install(venv, pkg, wheelhouse if wheelhouse_exists else None,
-                            quiet=quiet)
+        for pkg in itertools.chain(args.packages, read_requirements(args.requirements)):
+            if args.cache:
+                pip_wheel(wheelhouse, pkg, quiet=quiet)
+                pip_install(wheel_venv, pkg, wheelhouse, quiet=quiet)
+            pip_install(venv, pkg, wheelhouse if wheelhouse_exists else None,
+                        quiet=quiet)
 
 
 class Wheel(Subparser):
@@ -328,6 +335,10 @@ class Wheel(Subparser):
     """
 
     def add_arguments(self):
+        self.subparser.add_argument(
+            'packages', nargs='*',
+            help="""one or more packages (installed before packages
+            listed in requirements file)""")
         self.subparser.add_argument(
             '-r', '--requirements',
             help="""file containing list of packages to install"""
@@ -345,10 +356,9 @@ class Wheel(Subparser):
         pip_install(venv, WHEEL_PKG, quiet=quiet)
 
         # install packages if specified
-        if args.requirements:
-            for pkg in read_requirements(args.requirements):
-                pip_wheel(wheelhouse, pkg, quiet=quiet)
-                pip_install(venv, pkg, wheelhouse, quiet=quiet)
+        for pkg in itertools.chain(args.packages, read_requirements(args.requirements)):
+            pip_wheel(wheelhouse, pkg, quiet=quiet)
+            pip_install(venv, pkg, wheelhouse, quiet=quiet)
 
 
 def main(arguments=None):
