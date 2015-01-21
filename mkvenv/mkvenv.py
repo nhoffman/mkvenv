@@ -58,7 +58,11 @@ from os import path
 from urllib2 import urlopen
 from distutils.version import LooseVersion
 
-__version__ = '0.1.0'
+try:
+    with open('mkvenv/data/ver') as f:
+        __version__ = f.read().strip()
+except Exception, e:
+    __version__ = ''
 
 log = logging
 
