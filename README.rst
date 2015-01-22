@@ -63,14 +63,17 @@ packages require compilation::
 Installation
 ============
 
-For now, obtain the source code from GitHub
+Installation is most easily performed from PyPi using pip::
+
+  pip install mkvenv
+
+Alternatively, obtain the source code from either PyPi
+(https://pypi.python.org/pypi/mkvenv) or GitHub
 (https://github.com/nhoffman/mkvenv) and install by running either
 ``python setup.py install`` or ``pip install .`` from within the
 package directory. Installation provides a script named ``mkvenv`` as
 an entry point. ``mkvenv.py`` may also be executed directly from the
 top level of the package directory.
-
-TODO: upload to pypi
 
 Alternatively, note that the mkvenv script is implemented as a single
 python file that can be invoked directly as a script. This script can
@@ -88,5 +91,5 @@ Execution
 
 Run ``mkvenv -h`` for a list of subcommands and common options, or
 ``mkvenv <subcommand> -h`` for help on a subcommand. Note that common
-options must be provided before the name of the subcommand 
+options must be provided before the name of the subcommand
 (eg, ``mkvenv -v wheel -r requirements.txt``)
