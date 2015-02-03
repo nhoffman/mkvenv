@@ -13,6 +13,11 @@ Features:
  * Download the ``virtualenv`` source code when not already installed
    or out of date.
 
+Requirements
+============
+
+ * Python 2.7
+ * Unix-like systems (ie, not Windows)
 
 Examples
 ========
@@ -93,3 +98,15 @@ Run ``mkvenv -h`` for a list of subcommands and common options, or
 ``mkvenv <subcommand> -h`` for help on a subcommand. Note that common
 options must be provided before the name of the subcommand
 (eg, ``mkvenv -v wheel -r requirements.txt``)
+
+Known Bugs
+==========
+
+There's a known bug in pip using python 2.7 on OS X
+(https://github.com/pypa/pip/issues/1964 - the issue is not specific
+to this project) that results in an error on installation from PyPI
+with the message "AssertionError: Multiple .dist-info directories"
+after a previous installation. The solution is to delete any residual
+pip build directories::
+
+  find /private -name 'mkvenv' -exec rm -r "{}" \; 2> /dev/null
