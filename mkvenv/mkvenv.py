@@ -303,6 +303,10 @@ class Install(Subparser):
             '-r', '--requirements',
             help="""file containing list of packages to install""")
         self.subparser.add_argument(
+            '--system', action='store_true', default=False,
+            help=('install packages to the system version '
+                  'of the Python interpreter when --venv is undefined'))
+        self.subparser.add_argument(
             '--no-cache', dest='cache', action='store_false', default=True,
             help="""do not build and cache wheels in WHEELHOUSE/{}""".format(
                 PY_VERSION))
@@ -312,10 +316,14 @@ class Install(Subparser):
         venv = expand(args.venv or os.environ.get('VIRTUAL_ENV'))
 
         if venv:
-            log.info('installing packages to virtualenv {}'.format(args.venv))
             create_virtualenv(venv)
+            log.info('installing packages to virtualenv {}'.format(args.venv))
+        elif args.system:
+            log.info('installing packages using {}'.format(sys.executable))
         else:
-            log.info('installing packages to the system python')
+            log.error('Error: no virtualenv is defined. Use --system to install '
+                      'using the current Python interpreter ({})'.format(sys.executable))
+            sys.exit(1)
 
         wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
 
