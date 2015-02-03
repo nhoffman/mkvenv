@@ -3,4 +3,4 @@
 *.pyc
 /build/
 /dist/
-/mkvenv/data/
+/mkvenv/data/ver

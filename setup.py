@@ -15,6 +15,7 @@ setup(
     author='Noah Hoffman',
     author_email='noah.hoffman@gmail.com',
     description='Wrapper for virtualenv, pip, and wheel',
+    url='https://github.com/nhoffman/mkvenv',
     name='mkvenv',
     packages=find_packages(),
     package_dir={'mkvenv': 'mkvenv'},
