@@ -365,6 +365,15 @@ class Wheel(Subparser):
             pip_install(venv, pkg, wheelhouse, quiet=quiet)
 
 
+class VersionAction(argparse._VersionAction):
+    """Write the version string to stdout and exit"""
+    def __call__(self, parser, namespace, values, option_string=None):
+        formatter = parser._get_formatter()
+        formatter.add_text(parser.version if self.version is None else self.version)
+        sys.stdout.write(formatter.format_help())
+        sys.exit(0)
+
+
 def main(arguments=None):
 
     if arguments is None:
@@ -391,7 +400,7 @@ def main(arguments=None):
         '-q', '--quiet', action='store_const', dest='verbosity', const=0,
         help='suppress screen output from pip commands')
     parser.add_argument(
-        '-V', '--version', action='version', version=__version__,
+        '-V', '--version', action=VersionAction, version=__version__,
         help='Print the version number and exit')
 
     subparsers = parser.add_subparsers()
