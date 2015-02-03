@@ -113,15 +113,17 @@ def read_requirements(fname):
             yield line
 
 
-def pip_install(venv, pkg, wheelhouse=None, quiet=False):
-    pip = path.join(venv, 'bin', 'pip')
-    cmd = [pip, 'install', pkg]
+def pip_install(pkg, pip='pip', venv=None, wheelhouse=None, quiet=False):
+    pip = path.join(venv, 'bin', 'pip') if venv else pip
+    cmd = [pip, 'install', pkg, '--upgrade']
 
     if wheelhouse and path.exists(wheelhouse):
         cmd += ['--use-wheel', '--find-links', wheelhouse, '--no-index']
 
     if quiet:
         cmd += ['--quiet']
+
+    log.info(' '.join(cmd))
 
     subprocess.check_call(cmd)
 
@@ -309,10 +311,11 @@ class Install(Subparser):
         quiet = args.verbosity < 1
         venv = expand(args.venv or os.environ.get('VIRTUAL_ENV'))
 
-        if not venv:
-            sys.exit('a virtualenv must be active or a path specified using --venv')
-
-        log.info('installing packages to virtualenv {}'.format(args.venv))
+        if venv:
+            log.info('installing packages to virtualenv {}'.format(args.venv))
+            create_virtualenv(venv)
+        else:
+            log.info('installing packages to the system python')
 
         wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
 
@@ -320,17 +323,15 @@ class Install(Subparser):
             if not wheelhouse_exists:
                 sys.exit(('{} does not exist - you can '
                           'create it using the `wheel` command').format(wheelhouse))
-                log.info('caching wheels to {}'.format(wheelhouse))
-            wheel_venv = path.join(wheelhouse, 'venv')
+            log.info('caching wheels to {}'.format(wheelhouse))
 
-        create_virtualenv(venv)
-
+        wheelhouse = wheelhouse if (wheelhouse_exists and args.cache) else None
         for pkg in itertools.chain(args.packages, read_requirements(args.requirements)):
             if args.cache:
                 pip_wheel(wheelhouse, pkg, quiet=quiet)
-                pip_install(wheel_venv, pkg, wheelhouse, quiet=quiet)
-            pip_install(venv, pkg, wheelhouse if wheelhouse_exists else None,
-                        quiet=quiet)
+                pip_install(pkg, venv=path.join(wheelhouse, 'venv'),
+                            wheelhouse=wheelhouse, quiet=quiet)
+            pip_install(pkg, venv=venv, wheelhouse=wheelhouse, quiet=quiet)
 
 
 class Wheel(Subparser):
@@ -357,12 +358,12 @@ class Wheel(Subparser):
 
         venv = path.join(wheelhouse, 'venv')
         create_virtualenv(venv)
-        pip_install(venv, WHEEL_PKG, quiet=quiet)
+        pip_install(WHEEL_PKG, venv=venv, quiet=quiet)
 
         # install packages if specified
         for pkg in itertools.chain(args.packages, read_requirements(args.requirements)):
             pip_wheel(wheelhouse, pkg, quiet=quiet)
-            pip_install(venv, pkg, wheelhouse, quiet=quiet)
+            pip_install(pkg, venv=venv, wheelhouse=wheelhouse, quiet=quiet)
 
 
 class VersionAction(argparse._VersionAction):
