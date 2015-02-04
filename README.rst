@@ -6,20 +6,20 @@ A wrapper for virtualenv, pip, and wheel.
 
 Features:
 
- * Create and maintain a cache of wheels.
- * Create a virtualenv and install packages from the wheel cache in a
-   single command.
- * Add to the wheel cache as new packages are built.
- * Download the ``virtualenv`` source code when not already installed
-   or out of date.
+* Create and maintain a cache of wheels.
+* Create a virtualenv and install packages from the wheel cache in a
+  single command.
+* Add to the wheel cache as new packages are built.
+* Download the ``virtualenv`` source code when not already installed
+  or out of date.
 
 Note that this package should be considered alpha/unstable!
 
 Requirements
 ============
 
- * Python 2.7
- * Unix-like systems (ie, not Windows)
+* Python 2.7
+* Unix-like systems (ie, not Windows)
 
 Examples
 ========
