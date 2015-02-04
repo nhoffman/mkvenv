@@ -43,6 +43,7 @@ For usage examples see https://github.com/nhoffman/mkvenv
 import argparse
 import glob
 import imp
+import itertools
 import logging
 import os
 import shutil
@@ -181,7 +182,8 @@ def create_virtualenv(venv, version=VENV_VERSION, base_url=VENV_URL, srcdir=None
                 raise ImportError
             log.info('using system version of virtualenv')
         except ImportError:
-            log.info('downloading and extracting virtualenv source to {}'.format(srcdir))
+            log.info(
+                'downloading and extracting virtualenv source to {}'.format(srcdir))
 
             src_is_temp = not srcdir
             srcdir = srcdir or tempfile.mkdtemp()
@@ -265,8 +267,8 @@ class List(Subparser):
             for whl in glob.glob(path.join(wheelhouse, '*.whl')):
                 print(path.basename(whl))
         else:
-            log.warning('The directory {} does not exist - '
-                        'use the `wheelhouse` subcommand to create it'.format(wheelhouse))
+            log.warning('The directory {} does not exist - use the `wheelhouse` '
+                        'subcommand to create it'.format(wheelhouse))
 
 
 class Virtualenv(Subparser):
@@ -319,16 +321,16 @@ class Install(Subparser):
         elif args.system:
             log.info('installing packages using {}'.format(sys.executable))
         else:
-            log.error('Error: no virtualenv is defined. Use --system to install '
-                      'using the current Python interpreter ({})'.format(sys.executable))
+            log.error('Error: no virtualenv is defined. Use --system to install using '
+                      'the current Python interpreter ({})'.format(sys.executable))
             sys.exit(1)
 
         wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
 
         if args.cache:
             if not wheelhouse_exists:
-                sys.exit(('{} does not exist - you can '
-                          'create it using the `wheelhouse` command').format(wheelhouse))
+                sys.exit(('{} does not exist - you can create it '
+                          'using the `wheelhouse` command').format(wheelhouse))
             log.info('caching wheels to {}'.format(wheelhouse))
 
         wheelhouse = wheelhouse if (wheelhouse_exists and args.cache) else None
