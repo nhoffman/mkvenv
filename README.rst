@@ -13,6 +13,8 @@ Features:
  * Download the ``virtualenv`` source code when not already installed
    or out of date.
 
+Note that this package should be considered alpha/unstable!
+
 Requirements
 ============
 

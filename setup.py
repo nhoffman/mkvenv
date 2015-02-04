@@ -21,5 +21,13 @@ setup(
     package_dir={'mkvenv': 'mkvenv'},
     package_data={'mkvenv': ['data/ver']},
     entry_points={'console_scripts': ['mkvenv = mkvenv.mkvenv:main']},
-    version=__version__
+    version=__version__,
+    classifiers=[
+        'Development Status :: 3 - Alpha',
+        'Environment :: Console',
+        'Intended Audience :: Developers',
+        'Intended Audience :: System Administrators',
+        'Operating System :: POSIX',
+        'Programming Language :: Python :: 2.7',
+    ],
 )
