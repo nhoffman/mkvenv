@@ -51,14 +51,13 @@ import sys
 import tarfile
 import tempfile
 import textwrap
-import itertools
 
 from os import path
 from urllib2 import urlopen
 from distutils.version import LooseVersion
 
 try:
-    with open('mkvenv/data/ver') as f:
+    with open(path.join(path.dirname(__file__), 'data', 'ver')) as f:
         __version__ = f.read().strip()
 except Exception, e:
     __version__ = ''
