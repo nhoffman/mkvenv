@@ -2,8 +2,8 @@
  Changes for mkvenv
 ====================
 
-(head)
-======
+0.1.3
+=====
 
  * installation to system requires --system
  * remove global --system option
