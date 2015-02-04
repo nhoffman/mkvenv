@@ -22,7 +22,7 @@ Requirements
 Examples
 ========
 
-Create a wheel cache (~/wheels by default)::
+Create a wheel cache (~/.mkvenv by default)::
 
   % mkvenv wheel
   % mkvenv list-wheels

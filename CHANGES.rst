@@ -6,6 +6,9 @@
 ======
 
  * installation to system requires --system
+ * remove global --system option
+ * default WHEELHOUSE is ~/.mkvenv
+ * change 'wheel' command to 'wheelhouse'
 
 
 0.1.2

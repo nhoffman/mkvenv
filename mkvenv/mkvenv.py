@@ -17,14 +17,13 @@ now).
 The location of the wheel cache (the "wheelstreet") is determined as
 follows:
 
- * The default location is '~/wheels' (or
-   /usr/local/share/python/wheels if the --system option is used); or
+ * ``~/.mkvenv`` (the default location); or
  * the environment variable ``$WHEELSTREET``; or
- * a path specified using the ``-w/--wheelstreet`` option.
+ * a path specified using the ``-w/--wheelstreet`` option for a specific command.
 
 Within the "wheelstreet" directory, wheels are saved within a
 subdirectory (the "wheelhouse") named according to the version of the
-python interpreter (eg '~/wheels/2.7.9/'). In this way, wheels built
+python interpreter (eg '~/.mkvenv/2.7.9/'). In this way, wheels built
 against different versions of the interpreter may coexist.
 
 The target virtualenv is either:
@@ -70,8 +69,7 @@ VENV_URL = 'https://pypi.python.org/packages/source/v/virtualenv'
 VENV_VERSION = '1.11.6'
 
 PY_VERSION = "{}.{}.{}".format(*sys.version_info[:3])
-WHEELSTREET_SYSTEM = os.environ.get('WHEELSTREET', '/usr/local/share/python/wheels')
-WHEELSTREET_USER = os.environ.get('WHEELSTREET', '~/wheels')
+WHEELSTREET = '~/.mkvenv'
 
 WHEEL_PKG = 'wheel>=0.24.0'
 
@@ -154,10 +152,7 @@ def pip_wheel(wheelhouse, pkg, quiet=False):
 
 
 def wheel_paths(args):
-
-    wheelstreet = args.wheelstreet \
-        or os.environ.get('WHEELSTREET') \
-        or (WHEELSTREET_SYSTEM if args.system else WHEELSTREET_USER)
+    wheelstreet = args.wheelstreet or os.environ.get('WHEELSTREET') or WHEELSTREET
     wheelstreet = expand(wheelstreet)
     wheelhouse = path.join(wheelstreet, PY_VERSION)
 
@@ -266,9 +261,13 @@ class List(Subparser):
 
     def action(self, args):
         wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
-        log.warning('Wheels in {}/'.format(wheelhouse))
-        for whl in glob.glob(path.join(wheelhouse, '*.whl')):
-            print(path.basename(whl))
+        if wheelhouse_exists:
+            log.warning('= Wheels in {}/ ='.format(wheelhouse))
+            for whl in glob.glob(path.join(wheelhouse, '*.whl')):
+                print(path.basename(whl))
+        else:
+            log.warning('The directory {} does not exist - '
+                        'use the `wheelhouse` subcommand to create it'.format(wheelhouse))
 
 
 class Virtualenv(Subparser):
@@ -330,7 +329,7 @@ class Install(Subparser):
         if args.cache:
             if not wheelhouse_exists:
                 sys.exit(('{} does not exist - you can '
-                          'create it using the `wheel` command').format(wheelhouse))
+                          'create it using the `wheelhouse` command').format(wheelhouse))
             log.info('caching wheels to {}'.format(wheelhouse))
 
         wheelhouse = wheelhouse if (wheelhouse_exists and args.cache) else None
@@ -393,10 +392,6 @@ def main(arguments=None):
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument(
-        '--system', action='store_true', default=False,
-        help="""use {} for the default location of wheels (rather than
-        {})""".format(WHEELSTREET_SYSTEM, WHEELSTREET_USER))
-    parser.add_argument(
         '-w', '--wheelstreet',
         help="""install wheels in WHEELSTREET/{} instead of the
         default location (may also be specified by defining a shell
@@ -414,7 +409,7 @@ def main(arguments=None):
 
     subparsers = parser.add_subparsers()
     Virtualenv(subparsers, name='virtualenv')
-    Wheel(subparsers, name='wheel')
+    Wheel(subparsers, name='wheelhouse')
     Install(subparsers, name='install')
     Show(subparsers, name='show')
     List(subparsers, name='list-wheels')
