@@ -26,9 +26,9 @@ Examples
 
 Create a wheel cache (~/.mkvenv by default)::
 
-  % mkvenv wheel
+  % mkvenv wheelstreet
   % mkvenv list-wheels
-  Wheels in /Users/nhoffman/wheels/2.7.7/
+  = Wheels in /Users/nhoffman/.mkvenv/2.7.7/ =
 
 Now create a new virtualenv named ``test-env`` and install some
 packages. As each package is installed, a wheel is first built and
@@ -44,7 +44,7 @@ saved to the cache, along with wheels for any dependencies::
   pyflakes==0.8.1
   wsgiref==0.1.2
   % mkvenv list-wheels
-  Wheels in /Users/nhoffman/wheels/2.7.7/
+  = Wheels in /Users/nhoffman/.mkvenv/2.7.7/ =
   flake8-2.3.0-py2.py3-none-any.whl
   mccabe-0.3-py2.py3-none-any.whl
   pep8-1.5.7-py2.py3-none-any.whl
@@ -99,7 +99,7 @@ Execution
 Run ``mkvenv -h`` for a list of subcommands and common options, or
 ``mkvenv <subcommand> -h`` for help on a subcommand. Note that common
 options must be provided before the name of the subcommand
-(eg, ``mkvenv -v wheel -r requirements.txt``)
+(eg, ``mkvenv -v wheelstreet -r requirements.txt``)
 
 Known Bugs
 ==========
