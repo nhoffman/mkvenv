@@ -2,8 +2,8 @@
  Changes for mkvenv
 ====================
 
-head (0.1.4)
-============
+0.1.4
+=====
 
  * fix error calculating version number
 

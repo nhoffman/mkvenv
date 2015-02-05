@@ -263,7 +263,7 @@ class List(Subparser):
     def action(self, args):
         wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
         if wheelhouse_exists:
-            log.warning('= Wheels in {}/ ='.format(wheelhouse))
+            log.warning('# Wheels in {}/'.format(wheelhouse))
             for whl in glob.glob(path.join(wheelhouse, '*.whl')):
                 print(path.basename(whl))
         else:
