@@ -59,7 +59,7 @@ from distutils.version import LooseVersion
 
 try:
     with open(path.join(path.dirname(__file__), 'data', 'ver')) as f:
-        __version__ = f.read().strip()
+        __version__ = f.read().strip().replace('-', '+', 1)
 except Exception, e:
     __version__ = ''
 
@@ -294,8 +294,8 @@ class Install(Subparser):
     def add_arguments(self):
         self.subparser.add_argument(
             'packages', nargs='*',
-            help="""one or more packages (installed before packages
-            listed in requirements file)""")
+            help="""one or more packages (installed after packages
+            listed in the requirements file)""")
         self.subparser.add_argument(
             '--venv', help="path to a virtualenv (defaults to active virtualenv)",
             default=os.environ.get('VIRTUAL_ENV'))
@@ -334,7 +334,7 @@ class Install(Subparser):
             log.info('caching wheels to {}'.format(wheelhouse))
 
         wheelhouse = wheelhouse if (wheelhouse_exists and args.cache) else None
-        for pkg in itertools.chain(args.packages, read_requirements(args.requirements)):
+        for pkg in itertools.chain(read_requirements(args.requirements), args.packages):
             if args.cache:
                 pip_wheel(wheelhouse, pkg, quiet=quiet)
                 pip_install(pkg, venv=path.join(wheelhouse, 'venv'),
@@ -369,7 +369,7 @@ class Wheel(Subparser):
         pip_install(WHEEL_PKG, venv=venv, quiet=quiet)
 
         # install packages if specified
-        for pkg in itertools.chain(args.packages, read_requirements(args.requirements)):
+        for pkg in itertools.chain(read_requirements(args.requirements), args.packages):
             pip_wheel(wheelhouse, pkg, quiet=quiet)
             pip_install(pkg, venv=venv, wheelhouse=wheelhouse, quiet=quiet)
 

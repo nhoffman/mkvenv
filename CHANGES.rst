@@ -2,6 +2,12 @@
  Changes for mkvenv
 ====================
 
+0.1.5
+=====
+
+ * install packages in requirements file before those provided on command line
+ * post-tag version numbering complies with PEP 440
+
 0.1.4
 =====
 
