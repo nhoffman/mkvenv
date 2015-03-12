@@ -104,7 +104,7 @@ def read_requirements(fname):
 
     with open(fname) as f:
         for line in [x.strip() for x in f]:
-            if not line or line.startswith('#') or line.startswith('-e') or '/' in line:
+            if not line or line.startswith('#') or line.startswith('-e'):
                 log.info('skipping {}'.format(line))
                 continue
             log.info(line)
@@ -134,12 +134,10 @@ def pip_show(venv, pkg):
 
 
 def pip_wheel(wheelhouse, pkg, quiet=False):
-    cache = path.join(wheelhouse, 'cache')
     venv = path.join(wheelhouse, 'venv')
     pip = path.join(venv, 'bin', 'pip')
     cmd = [
         pip, 'wheel', pkg,
-        '--download-cache', cache,
         '--use-wheel',
         '--find-links', wheelhouse,
         '--wheel-dir', wheelhouse
