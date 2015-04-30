@@ -63,20 +63,22 @@ cleanup
 exists test-env
 
 cleanup
-./mkvenv.py $quiet $verbose --wheelstreet wheelstreet wheel
+./mkvenv.py $quiet $verbose --wheelstreet wheelstreet \
+	    wheelhouse
 exists wheelstreet
 
 cleanup
-WHEELSTREET=wheelstreet ./mkvenv.py $quiet $verbose wheel
+WHEELSTREET=wheelstreet ./mkvenv.py $quiet $verbose wheelhouse
 exists wheelstreet
 
 cleanup
-./mkvenv.py $quiet $verbose --wheelstreet wheelstreet wheel --requirements requirements.txt
+./mkvenv.py $quiet $verbose --wheelstreet wheelstreet wheelhouse \
+	    --requirements requirements.txt
 
 ## install, wheel exists before installation
 cleanup
 export WHEELSTREET=wheelstreet
-./mkvenv.py $quiet $verbose wheel -r requirements.txt
+./mkvenv.py $quiet $verbose wheelhouse -r requirements.txt
 ./mkvenv.py $quiet $verbose install -r requirements.txt --venv test-env
 exists wheelstreet
 exists test-env
@@ -84,7 +86,7 @@ exists test-env
 ## install, caching wheel in the process
 cleanup
 export WHEELSTREET=wheelstreet
-./mkvenv.py $quiet $verbose wheel
+./mkvenv.py $quiet $verbose wheelhouse
 ./mkvenv.py $quiet $verbose install -r requirements.txt --venv test-env
 exists wheelstreet
 exists test-env
