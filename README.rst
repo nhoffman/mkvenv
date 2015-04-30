@@ -19,6 +19,10 @@ Note that this package should be considered alpha/unstable!
 .. image:: https://travis-ci.org/nhoffman/mkvenv.svg?branch=master
    :target: https://travis-ci.org/nhoffman/mkvenv
 
+.. image:: https://pypip.in/v/mkvenv/badge.png
+    :target: https://crate.io/packages/mkvenv/
+    :alt: Latest PyPI version
+
 Requirements
 ============
 
