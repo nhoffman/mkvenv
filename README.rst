@@ -16,6 +16,9 @@ Features:
 
 Note that this package should be considered alpha/unstable!
 
+.. image:: https://travis-ci.org/nhoffman/mkvenv.svg?branch=master
+   :target: https://travis-ci.org/nhoffman/mkvenv
+
 Requirements
 ============
 
