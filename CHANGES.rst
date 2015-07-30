@@ -2,6 +2,11 @@
  Changes for mkvenv
 ====================
 
+0.2.2
+=====
+
+* fix error in construction of list of packages to install
+
 0.2.1
 =====
 

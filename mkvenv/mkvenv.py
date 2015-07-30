@@ -332,7 +332,10 @@ class Install(Subparser):
             log.info('caching wheels to {}'.format(wheelhouse))
 
         wheelhouse = wheelhouse if (wheelhouse_exists and args.cache) else None
-        for pkg in itertools.chain(read_requirements(args.requirements), args.packages):
+        packages = itertools.ifilter(
+            None, itertools.chain(read_requirements(args.requirements), args.packages))
+        for pkg in packages:
+            log.info('installing package: {}'.format(pkg))
             if args.cache:
                 pip_wheel(wheelhouse, pkg, quiet=quiet)
                 pip_install(pkg, venv=path.join(wheelhouse, 'venv'),
@@ -376,7 +379,10 @@ class Init(Subparser):
         pip_install(WHEEL_PKG, venv=venv, quiet=quiet)
 
         # install packages if specified
-        for pkg in itertools.chain(read_requirements(args.requirements), args.packages):
+        packages = itertools.ifilter(
+            None, itertools.chain(read_requirements(args.requirements), args.packages))
+        for pkg in packages:
+            log.info('installing package: {}'.format(pkg))
             pip_wheel(wheelhouse, pkg, quiet=quiet)
             pip_install(pkg, venv=venv, wheelhouse=wheelhouse, quiet=quiet)
 
@@ -432,7 +438,9 @@ def main(arguments=None):
         3: logging.DEBUG,
     }.get(args.verbosity, logging.DEBUG)
 
-    logformat = '%(levelname)s %(message)s' if args.verbosity > 1 else '%(message)s'
+    logformat = ('%(levelname)s %(funcName)s %(lineno)s %(message)s'
+                 if args.verbosity > 1
+                 else '%(message)s')
     logging.basicConfig(file=sys.stderr, format=logformat, level=loglevel)
 
     log.info('using {} ({})'.format(sys.executable, PY_VERSION))
