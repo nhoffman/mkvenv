@@ -354,6 +354,10 @@ class Init(Subparser):
             '-r', '--requirements',
             help="""file containing list of packages to install"""
         )
+        self.subparser.add_argument(
+            '--check', action='store_true', default=False,
+            help="""Exit with 0 status if WHEELHOUSE already exists, 1 otherwise"""
+        )
 
     def action(self, args):
 
@@ -363,6 +367,11 @@ class Init(Subparser):
         quiet = args.verbosity < 1
 
         venv = path.join(wheelhouse, 'venv')
+        if args.check:
+            exists = path.exists(path.join(venv, 'bin', 'activate'))
+            log.info("WHEELHOUSE {} {}".format(venv, 'exists' if exists else 'does not exist'))
+            sys.exit(0 if exists else 1)
+
         create_virtualenv(venv)
         pip_install(WHEEL_PKG, venv=venv, quiet=quiet)
 

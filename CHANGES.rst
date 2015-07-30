@@ -2,6 +2,11 @@
  Changes for mkvenv
 ====================
 
+0.2.1
+=====
+
+* add ``mkvenv init --check``
+
 0.2.0
 =====
 
