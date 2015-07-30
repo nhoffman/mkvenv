@@ -265,7 +265,7 @@ class List(Subparser):
             for whl in glob.glob(path.join(wheelhouse, '*.whl')):
                 print(path.basename(whl))
         else:
-            log.warning('The directory {} does not exist - use the `wheelhouse` '
+            log.warning('The directory {} does not exist - use the `init` '
                         'subcommand to create it'.format(wheelhouse))
 
 
@@ -328,7 +328,7 @@ class Install(Subparser):
         if args.cache:
             if not wheelhouse_exists:
                 sys.exit(('{} does not exist - you can create it '
-                          'using the `wheelhouse` command').format(wheelhouse))
+                          'using the `init` command').format(wheelhouse))
             log.info('caching wheels to {}'.format(wheelhouse))
 
         wheelhouse = wheelhouse if (wheelhouse_exists and args.cache) else None
@@ -340,7 +340,7 @@ class Install(Subparser):
             pip_install(pkg, venv=venv, wheelhouse=wheelhouse, quiet=quiet)
 
 
-class Wheel(Subparser):
+class Init(Subparser):
     """
     Create the WHEELHOUSE, optionally building wheels
     """
@@ -408,7 +408,7 @@ def main(arguments=None):
 
     subparsers = parser.add_subparsers()
     Virtualenv(subparsers, name='virtualenv')
-    Wheel(subparsers, name='wheelhouse')
+    Init(subparsers, name='init')
     Install(subparsers, name='install')
     Show(subparsers, name='show')
     List(subparsers, name='list-wheels')

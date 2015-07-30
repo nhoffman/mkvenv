@@ -34,7 +34,7 @@ Examples
 
 Create a wheel cache (~/.mkvenv by default)::
 
-  % mkvenv wheelstreet
+  % mkvenv init
   % mkvenv list-wheels
   # Wheels in /Users/nhoffman/.mkvenv/2.7.7/
 

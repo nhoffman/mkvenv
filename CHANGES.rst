@@ -2,6 +2,12 @@
  Changes for mkvenv
 ====================
 
+0.2.0
+=====
+
+* rename ``mkvenv wheelhouse`` to ``mkvenv init``
+
+
 0.1.6
 =====
 
