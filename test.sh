@@ -61,7 +61,10 @@ requirements_installed(){
 }
 
 quiet="-q"
-verbose="-v"
+verbose=""
+
+# quiet=""
+# verbose="-v"
 
 cleanup
 echo "installation without wheel"
@@ -88,6 +91,7 @@ cleanup
 echo "create cache and target venv, install some packages"
 ./mkvenv.py $quiet $verbose --wheelstreet wheelstreet init \
 	    --requirements requirements.txt
+requirements_installed $(./mkvenv.py -v --wheelstreet wheelstreet init --check) requirements.txt
 
 cleanup
 echo "install, wheel exists before installation"
@@ -96,6 +100,7 @@ export WHEELSTREET=wheelstreet
 ./mkvenv.py $quiet $verbose install -r requirements.txt --venv test-env
 exists wheelstreet
 exists test-env
+requirements_installed test-env requirements.txt
 
 cleanup
 echo "install, caching wheel in the process"
@@ -104,13 +109,15 @@ export WHEELSTREET=wheelstreet
 ./mkvenv.py $quiet $verbose install -r requirements.txt --venv test-env
 exists wheelstreet
 exists test-env
+requirements_installed test-env requirements.txt
 
 cleanup
 echo "installation to existing, active virtualenv"
 ./mkvenv.py $quiet $verbose virtualenv test-env
 exists test-env
 source test-env/bin/activate
-./mkvenv.py $quiet $verbose install -r requirements.txt --no-cache
+./mkvenv.py $quiet $verbose install -r requirements.txt
 ./mkvenv.py $quiet $verbose show --venv test-env flake8
+requirements_installed test-env requirements.txt
 
 cleanup
