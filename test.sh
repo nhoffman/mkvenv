@@ -55,49 +55,58 @@ exists(){
     test -e "$1" || (echo "error: $1 not found"; exit 1)
 }
 
+requirements_installed(){
+    # usage: requirements_installed venv requirements.txt
+    grep -q -f "$2" <("$1"/bin/pip freeze)
+}
+
 quiet="-q"
-verbose=""
+verbose="-v"
 
 cleanup
+echo "installation without wheel"
+./mkvenv.py $quiet $verbose install -r requirements.txt --venv test-env --no-cache
+exists test-env
+requirements_installed test-env requirements.txt
+
+cleanup
+echo "create virtualenv only"
 ./mkvenv.py $quiet $verbose virtualenv test-env
 exists test-env
 
 cleanup
-./mkvenv.py $quiet $verbose --wheelstreet wheelstreet \
-	    init
+echo "create cache"
+./mkvenv.py $quiet $verbose --wheelstreet wheelstreet init
 exists wheelstreet
 
 cleanup
+echo "create cache, specify location using environment variable"
 WHEELSTREET=wheelstreet ./mkvenv.py $quiet $verbose init
 exists wheelstreet
 
 cleanup
+echo "create cache and target venv, install some packages"
 ./mkvenv.py $quiet $verbose --wheelstreet wheelstreet init \
 	    --requirements requirements.txt
 
-## install, wheel exists before installation
 cleanup
+echo "install, wheel exists before installation"
 export WHEELSTREET=wheelstreet
 ./mkvenv.py $quiet $verbose init -r requirements.txt
 ./mkvenv.py $quiet $verbose install -r requirements.txt --venv test-env
 exists wheelstreet
 exists test-env
 
-## install, caching wheel in the process
 cleanup
+echo "install, caching wheel in the process"
 export WHEELSTREET=wheelstreet
 ./mkvenv.py $quiet $verbose init
 ./mkvenv.py $quiet $verbose install -r requirements.txt --venv test-env
 exists wheelstreet
 exists test-env
 
-## installation without wheel
 cleanup
-./mkvenv.py $quiet $verbose install -r requirements.txt --venv test-env --no-cache
-exists test-env
-
-## installation to existing, active virtualenv
-cleanup
+echo "installation to existing, active virtualenv"
 ./mkvenv.py $quiet $verbose virtualenv test-env
 exists test-env
 source test-env/bin/activate
