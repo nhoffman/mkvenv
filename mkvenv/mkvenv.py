@@ -66,7 +66,7 @@ except Exception, e:
 log = logging
 
 VENV_URL = 'https://pypi.python.org/packages/source/v/virtualenv'
-VENV_VERSION = '1.11.6'
+VENV_VERSION = '13.1.0'
 
 PY_VERSION = "{}.{}.{}".format(*sys.version_info[:3])
 WHEELSTREET = '~/.mkvenv'
