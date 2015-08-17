@@ -2,6 +2,13 @@
  Changes for mkvenv
 ====================
 
+upcoming
+========
+
+* update minimum version of virtualenv to 13.1.0
+* --no-cache allows pip to download packages from index
+* `init --check` prints path of wheelhouse to stdout
+
 0.2.2
 =====
 

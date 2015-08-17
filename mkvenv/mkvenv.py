@@ -107,23 +107,35 @@ def read_requirements(fname):
             if not line or line.startswith('#') or line.startswith('-e'):
                 log.info('skipping {}'.format(line))
                 continue
-            log.info(line)
+            log.debug(line)
             yield line
 
 
-def pip_install(pkg, pip='pip', venv=None, wheelhouse=None, quiet=False):
+def pip_install(pkg, pip='pip', venv=None, wheelhouse=None,
+                use_index=True, quiet=False):
+
     pip = path.join(venv, 'bin', 'pip') if venv else pip
     cmd = [pip, 'install', pkg, '--upgrade']
 
     if wheelhouse and path.exists(wheelhouse):
-        cmd += ['--use-wheel', '--find-links', wheelhouse, '--no-index']
+        cmd += ['--use-wheel', '--find-links', wheelhouse]
+
+    if not use_index:
+        cmd += ['--no-index']
 
     if quiet:
         cmd += ['--quiet']
 
     log.info(' '.join(cmd))
-
     subprocess.check_call(cmd)
+
+    # try:
+    #     subprocess.check_call(cmd)
+    # except subprocess.CalledProcessError, e:
+    #     log.error(('Installation of "{}" failed. '
+    #                'This could have been a result of using --no-cache '
+    #                'without a wheel for the packge in {}').format(pkg, wheelhouse))
+    #     raise e
 
 
 def pip_show(venv, pkg):
@@ -305,8 +317,9 @@ class Install(Subparser):
             help=('install packages to the system version '
                   'of the Python interpreter when --venv is undefined'))
         self.subparser.add_argument(
-            '--no-cache', dest='cache', action='store_false', default=True,
-            help="""do not build and cache wheels in WHEELHOUSE/{}""".format(
+            '--no-cache', dest='add_to_cache', action='store_false', default=True,
+            help="""do not build and cache wheels in WHEELHOUSE/{},
+            but install from cached wheels if available.""".format(
                 PY_VERSION))
 
     def action(self, args):
@@ -325,22 +338,25 @@ class Install(Subparser):
 
         wheelstreet, wheelhouse, wheelhouse_exists = wheel_paths(args)
 
-        if args.cache:
+        if args.add_to_cache:
             if not wheelhouse_exists:
                 sys.exit(('{} does not exist - you can create it '
                           'using the `init` command').format(wheelhouse))
             log.info('caching wheels to {}'.format(wheelhouse))
 
-        wheelhouse = wheelhouse if (wheelhouse_exists and args.cache) else None
+        wheelhouse = wheelhouse if (args.add_to_cache and wheelhouse_exists) else None
         packages = itertools.ifilter(
             None, itertools.chain(read_requirements(args.requirements), args.packages))
         for pkg in packages:
             log.info('installing package: {}'.format(pkg))
-            if args.cache:
+            if args.add_to_cache:
                 pip_wheel(wheelhouse, pkg, quiet=quiet)
-                pip_install(pkg, venv=path.join(wheelhouse, 'venv'),
-                            wheelhouse=wheelhouse, quiet=quiet)
-            pip_install(pkg, venv=venv, wheelhouse=wheelhouse, quiet=quiet)
+                pip_install(
+                    pkg, venv=path.join(wheelhouse, 'venv'), wheelhouse=wheelhouse, quiet=quiet)
+
+            # if not using the cache, allow pip to download packages
+            pip_install(pkg, venv=venv, wheelhouse=wheelhouse,
+                        use_index=not args.add_to_cache, quiet=quiet)
 
 
 class Init(Subparser):
