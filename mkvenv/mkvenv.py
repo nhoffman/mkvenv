@@ -372,6 +372,8 @@ class Init(Subparser):
         venv = path.join(wheelhouse, 'venv')
         if args.check:
             exists = path.exists(path.join(venv, 'bin', 'activate'))
+            if exists:
+                print(venv)
             log.info("WHEELHOUSE {} {}".format(venv, 'exists' if exists else 'does not exist'))
             sys.exit(0 if exists else 1)
 
