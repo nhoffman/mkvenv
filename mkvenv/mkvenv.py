@@ -360,8 +360,12 @@ class Install(Subparser):
 
 
 class Init(Subparser):
-    """
-    Create the WHEELHOUSE, optionally building wheels
+    """Create the WHEELHOUSE, optionally building wheels.
+
+    Note that packages installed to WHEELHOUSE/venv can be updated
+    using this subcommand. For example, to update pip::
+
+      mkvenv init pip
     """
 
     def add_arguments(self):
