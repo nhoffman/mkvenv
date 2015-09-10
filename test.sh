@@ -113,7 +113,7 @@ requirements_installed test-env requirements.txt
 
 cleanup
 echo "installation to existing, active virtualenv"
-./mkvenv.py $quiet $verbose virtualenv test-env
+virtualenv test-env
 exists test-env
 source test-env/bin/activate
 ./mkvenv.py $quiet $verbose install -r requirements.txt
