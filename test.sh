@@ -113,9 +113,11 @@ requirements_installed test-env requirements.txt
 
 cleanup
 echo "installation to existing, active virtualenv"
+export WHEELSTREET=wheelstreet
 virtualenv test-env
 exists test-env
 source test-env/bin/activate
+./mkvenv.py $quiet $verbose init
 ./mkvenv.py $quiet $verbose install -r requirements.txt
 ./mkvenv.py $quiet $verbose show --venv test-env flake8
 requirements_installed test-env requirements.txt
