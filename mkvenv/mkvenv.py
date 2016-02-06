@@ -66,12 +66,12 @@ except Exception, e:
 log = logging
 
 VENV_URL = 'https://pypi.python.org/packages/source/v/virtualenv'
-VENV_VERSION = '13.1.0'
+VENV_VERSION = '14.0.5'
 
 PY_VERSION = "{}.{}.{}".format(*sys.version_info[:3])
 WHEELSTREET = '~/.mkvenv'
 
-WHEEL_PKG = 'wheel>=0.24.0'
+WHEEL_PKG = 'wheel>=0.29.0'
 
 
 def mkdir(pth):
@@ -128,14 +128,6 @@ def pip_install(pkg, pip='pip', venv=None, wheelhouse=None,
 
     log.info(' '.join(cmd))
     subprocess.check_call(cmd)
-
-    # try:
-    #     subprocess.check_call(cmd)
-    # except subprocess.CalledProcessError, e:
-    #     log.error(('Installation of "{}" failed. '
-    #                'This could have been a result of using --no-cache '
-    #                'without a wheel for the packge in {}').format(pkg, wheelhouse))
-    #     raise e
 
 
 def pip_show(venv, pkg):
@@ -207,6 +199,8 @@ def create_virtualenv(venv, version=VENV_VERSION, base_url=VENV_URL, srcdir=None
 
         log.info('creating virtualenv {}'.format(venv))
         virtualenv.create_environment(venv)
+        # make sure we're using the most recent version of pip
+        pip_install('pip', venv=venv)
 
         if src_is_temp:
             shutil.rmtree(srcdir)
@@ -352,7 +346,8 @@ class Install(Subparser):
             if args.add_to_cache:
                 pip_wheel(wheelhouse, pkg, quiet=quiet)
                 pip_install(
-                    pkg, venv=path.join(wheelhouse, 'venv'), wheelhouse=wheelhouse, quiet=quiet)
+                    pkg, venv=path.join(wheelhouse, 'venv'),
+                    wheelhouse=wheelhouse, quiet=quiet)
 
             # if not using the cache, allow pip to download packages
             pip_install(pkg, venv=venv, wheelhouse=wheelhouse,
@@ -360,7 +355,7 @@ class Install(Subparser):
 
 
 class Init(Subparser):
-    """Create the WHEELHOUSE, optionally building wheels.
+    """Create or update the WHEELHOUSE, optionally building wheels.
 
     Note that packages installed to WHEELHOUSE/venv can be updated
     using this subcommand. For example, to update pip::
@@ -394,7 +389,8 @@ class Init(Subparser):
             exists = path.exists(path.join(venv, 'bin', 'activate'))
             if exists:
                 print(venv)
-            log.info("WHEELHOUSE {} {}".format(venv, 'exists' if exists else 'does not exist'))
+            log.info("WHEELHOUSE {} {}".format(
+                venv, 'exists' if exists else 'does not exist'))
             sys.exit(0 if exists else 1)
 
         create_virtualenv(venv)
