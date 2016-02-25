@@ -120,6 +120,9 @@ source test-env/bin/activate
 ./mkvenv.py $quiet $verbose init
 ./mkvenv.py $quiet $verbose install -r requirements.txt
 ./mkvenv.py $quiet $verbose show --venv test-env flake8
+# test --extra-args
+./mkvenv.py $quiet $verbose install --venv test-env --extra-args=--no-deps flake8
+./mkvenv.py $quiet $verbose install --venv test-env --extra-args="-v --no-deps" flake8
 requirements_installed test-env requirements.txt
 
 cleanup

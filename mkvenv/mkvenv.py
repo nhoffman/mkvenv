@@ -46,6 +46,7 @@ import imp
 import itertools
 import logging
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -112,7 +113,7 @@ def read_requirements(fname):
 
 
 def pip_install(pkg, pip='pip', venv=None, wheelhouse=None,
-                use_index=True, quiet=False):
+                use_index=True, quiet=False, extra_args=None):
 
     pip = path.join(venv, 'bin', 'pip') if venv else pip
     cmd = [pip, 'install', pkg, '--upgrade']
@@ -125,6 +126,9 @@ def pip_install(pkg, pip='pip', venv=None, wheelhouse=None,
 
     if quiet:
         cmd += ['--quiet']
+
+    if extra_args:
+        cmd += extra_args
 
     log.info(' '.join(cmd))
     subprocess.check_call(cmd)
@@ -315,10 +319,17 @@ class Install(Subparser):
             help="""do not build and cache wheels in WHEELHOUSE/{},
             but install from cached wheels if available.""".format(
                 PY_VERSION))
+        self.subparser.add_argument(
+            '--extra-args', help="""Extra arguments to pass to pip.
+            If only a single argument is provided, use an equals sign,
+            eg '--extra-args=--no-deps'. Use quotes for multiple
+            arguments.""")
 
     def action(self, args):
         quiet = args.verbosity < 1
         venv = expand(args.venv or os.environ.get('VIRTUAL_ENV'))
+
+        extra_args = shlex.split(args.extra_args) if args.extra_args else None
 
         if venv:
             create_virtualenv(venv)
@@ -347,11 +358,11 @@ class Install(Subparser):
                 pip_wheel(wheelhouse, pkg, quiet=quiet)
                 pip_install(
                     pkg, venv=path.join(wheelhouse, 'venv'),
-                    wheelhouse=wheelhouse, quiet=quiet)
+                    wheelhouse=wheelhouse, quiet=quiet, extra_args=extra_args)
 
             # if not using the cache, allow pip to download packages
             pip_install(pkg, venv=venv, wheelhouse=wheelhouse,
-                        use_index=not args.add_to_cache, quiet=quiet)
+                        use_index=not args.add_to_cache, quiet=quiet, extra_args=extra_args)
 
 
 class Init(Subparser):

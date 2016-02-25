@@ -2,6 +2,11 @@
  Changes for mkvenv
 ====================
 
+0.2.4
+=====
+
+* add ``mkvenv install --extra-args``
+
 0.2.3
 =====
 
